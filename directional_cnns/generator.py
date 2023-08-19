@@ -3,7 +3,7 @@ Keras sequence to be used as generator.
 """
 
 import numpy as np
-from tensorflow.keras.utils import Sequence
+from keras.utils.data_utils import Sequence
 
 
 def tempo_augmenter():

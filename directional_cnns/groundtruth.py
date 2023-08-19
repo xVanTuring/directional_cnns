@@ -11,7 +11,7 @@ from os.path import basename, splitext
 
 import librosa
 import numpy as np
-from sklearn.externals.joblib import load
+from joblib import load
 from tensorflow.python.lib.io.file_io import file_exists
 from tensorflow.python.keras import backend as K
 

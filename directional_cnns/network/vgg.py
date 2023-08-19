@@ -1,14 +1,16 @@
-from tensorflow.python.keras import Input, Model
-from tensorflow.python.keras.layers import Conv2D, BatchNormalization, Dropout, GlobalAveragePooling2D, \
+from keras import Input, Model
+from keras.layers import Conv2D, BatchNormalization, Dropout, GlobalAveragePooling2D, \
     Activation, MaxPooling2D, AveragePooling2D
 
 
 def create_vgg_like_model(input_shape=(40, 256, 1), output_dim=256, filters=64, pool_shape=(1, 2), max_pool=True,
                           filter_shapes=[(1, 5), (1, 3)], dropout=0.3):
 
-    model_name = 'vgg_like_in={}_out={}_filters={}_pool_shape={}_max={}_filter_shapes={}_dropout={}'\
-        .format(input_shape, output_dim, filters, pool_shape, max_pool, filter_shapes, dropout)\
-        .replace(',', '_').replace(' ', '_')
+    model_name = 'vgg_like_in={}-out={}-filters={}-pool_shape={}-max={}-filter_shapes={}-dropout={}'\
+        .replace(', ', '_') \
+        .replace(',', '_').replace(' ', '_')\
+        .replace('=','/').replace('(','').replace(')','')\
+        .replace('[','').replace(']','')
 
     visible = Input(shape=(input_shape[0], None, input_shape[2]))
     x = visible
@@ -72,6 +74,6 @@ def possible_pool(layer, input_shape, pool_shape, max_pool, x):
     if input_shape[1] is not None and pool_shape[1] ** layer > input_shape[1]:
         h = 1
     if max_pool:
-        return MaxPooling2D((w, h), name='MaxPool2D' + str(layer))(x)
+        return MaxPooling2D((w, h))(x)
     else:
-        return AveragePooling2D((w, h), name='AvgPool2D' + str(layer))(x)
+        return AveragePooling2D((w, h))(x)

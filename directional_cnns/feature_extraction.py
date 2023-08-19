@@ -8,7 +8,7 @@ from os.path import join
 
 import librosa
 import numpy as np
-from sklearn.externals import joblib
+import joblib
 
 from directional_cnns.groundtruth import TempoGroundTruth
 

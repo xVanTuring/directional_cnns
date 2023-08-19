@@ -7,7 +7,7 @@ from os import makedirs, remove
 from os.path import dirname, isdir
 from random import randint
 
-from sklearn.externals.joblib import dump
+from joblib import dump
 from tensorflow.python.lib.io.file_io import file_exists, FileIO
 
 

@@ -5,8 +5,8 @@ Functions for loading and augmenting samples.
 import math
 
 import numpy as np
-from tensorflow.python.keras.preprocessing.image import apply_transform
-
+from keras.preprocessing.image import ImageDataGenerator
+img_gen = ImageDataGenerator()
 
 def create_mel_sample_loader(dataset, shape=(40, 256, 1), random_offset=True, normalizer=None):
     """
@@ -53,7 +53,7 @@ def create_mel_sample_loader(dataset, shape=(40, 256, 1), random_offset=True, no
         h = mel_spectrogram.shape[1]
         transform = np.array([[scale_factor, 0, 0], [0, 1, 0], [0, 0, 1]])
         image = mel_spectrogram.astype(np.float64).reshape(w, h)
-        scaled_image = apply_transform(image, transform, fill_mode='constant').astype(np.float16)
+        scaled_image = img_gen.apply_transform(image, transform, fill_mode='constant').astype(np.float16)
         # if the result is shorter, shorten the np array as well
         if scale_factor > 1:
             new_length = int(scaled_image.shape[1] / scale_factor)

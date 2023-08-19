@@ -1,5 +1,5 @@
-from tensorflow.python.keras import Input, Model
-from tensorflow.python.keras.layers import Conv2D, Dropout, AveragePooling2D, GlobalAveragePooling2D, Activation
+from keras import Input, Model
+from keras.layers import Conv2D, Dropout, AveragePooling2D, GlobalAveragePooling2D, Activation
 
 
 def create_shallow_key_model(input_shape=(168, 60, 1), output_dim=24, filters=4,
@@ -8,9 +8,13 @@ def create_shallow_key_model(input_shape=(168, 60, 1), output_dim=24, filters=4,
     short_filter_shape = (short_filter_length, 1)
     long_filter_shape = (long_filter_length, 1)
 
-    model_name = 'shallow_key_in={}_out={}_filters={}_short_shape={}_long_shape={}_dropout={}'\
+    model_name = 'shallow_key_in={}-out={}-filters={}-short_shape={}-long_shape={}-dropout={}'\
         .format(input_shape, output_dim, filters, short_filter_shape, long_filter_shape, dropout) \
-        .replace(',', '_').replace(' ', '_')
+        .replace(', ', '_') \
+        .replace(',', '_').replace(' ', '_')\
+        .replace('=','/').replace('(','').replace(')','')\
+        .replace('[','').replace(']','')
+        
 
     visible = Input(shape=(input_shape[0], None, input_shape[2]))
     x = visible

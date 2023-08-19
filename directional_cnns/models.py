@@ -1,4 +1,4 @@
-from tensorflow.python.keras.models import load_model
+from keras.models import load_model
 
 from directional_cnns.cloudml_utils import create_local_copy
 

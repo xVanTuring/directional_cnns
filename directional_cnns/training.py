@@ -8,12 +8,11 @@ import time
 from os.path import join
 
 import tensorflow as tf
-from sklearn.externals import joblib
+import joblib
 from sklearn.preprocessing import OneHotEncoder
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
-from tensorflow.python.keras.models import load_model
-from tensorflow.python.keras.optimizers import Adam
+from keras import backend as K
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from keras.models import load_model, Model
 from tensorflow.python.lib.io.file_io import FileIO, file_exists
 
 from directional_cnns.cloudml_utils import create_local_copy, save_model, make_missing_dirs
@@ -205,12 +204,14 @@ def is_tempo_feature(feature):
     tempo_features = feature.shape[0] == 40
     return tempo_features
 
+def file_safe_name(name):
+    return name.replace('/','=')
 
-def train(run=0, epochs=5000, patience=50, batch_size=32, lr=0.001, model=None, input_shape=(40, 256, 1),
+def train(run=0, epochs=5000, patience=50, batch_size=32, lr=0.001, model:Model=None, input_shape=(40, 256, 1),
           augmenter=None, train_ground_truth=None, valid_ground_truth=None, train_loader=None, valid_loader=None,
           model_dir='./', log=None):
     # and save to model_dir
-    model_file = join(model_dir, 'model_{}_run={}.h5'.format(model.name, run))
+    model_file = join(model_dir, 'model_{}_run={}.h5'.format(file_safe_name(model.name), run))
     if file_exists(model_file):
         log('Model file {} already exists. Skipping training.'.format(model_file))
         return ModelLoader(model_file, model.name)
@@ -218,7 +219,8 @@ def train(run=0, epochs=5000, patience=50, batch_size=32, lr=0.001, model=None, 
         checkpoint_model_file = 'checkpoint_model.h5'
         binarizer = OneHotEncoder(sparse=False)
         binarizer.fit([[c] for c in range(train_ground_truth.nb_classes)])
-        model.compile(loss='categorical_crossentropy', optimizer=(Adam(lr=lr)), metrics=['accuracy'])
+        # model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=lr), metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         log('Run {}, {}, params={}'.format(run, model.name, model.count_params()))
         log(model.summary())
         train_generator = DataGenerator(train_ground_truth,
@@ -229,9 +231,13 @@ def train(run=0, epochs=5000, patience=50, batch_size=32, lr=0.001, model=None, 
                                         valid_loader,
                                         binarizer, batch_size=batch_size,
                                         sample_shape=input_shape, shuffle=False, augmenter=None)
+        logdir = "tf_logs/scalars/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard_callback = TensorBoard(log_dir=logdir)
+
         callbacks = [EarlyStopping(monitor='val_loss', patience=patience, verbose=1),
-                     ModelCheckpoint(checkpoint_model_file, monitor='val_loss')]
-        model.fit_generator(train_generator, epochs=epochs, callbacks=callbacks,
+                     ModelCheckpoint(checkpoint_model_file, monitor='val_loss'),
+                     tensorboard_callback]
+        model.fit(train_generator, epochs=epochs, verbose=0, callbacks=callbacks,
                                       validation_data=valid_generator)
         log(model.summary())
         log('lr={}, batch_size={}, epochs={}, augmenter={}, model_name={}'
