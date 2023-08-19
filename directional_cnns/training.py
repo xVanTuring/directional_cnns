@@ -13,6 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.models import load_model, Model
+from keras.optimizers import Adam
 from tensorflow.python.lib.io.file_io import FileIO, file_exists
 
 from directional_cnns.cloudml_utils import create_local_copy, save_model, make_missing_dirs
@@ -107,13 +108,13 @@ def train_and_predict(train_file, valid_file, test_files, feature_files, job_dir
             valid_ground_truth = KeyGroundTruth(valid_file)
             log('Loaded {} validation annotations from {}.'.format(len(valid_ground_truth.labels), valid_file))
 
-        batch_size = 32
+        batch_size = 64
         lr = 0.001
         epochs = 5000 # 5000 ?
         patience = 100 # 150 ?
         filters = 4
         dropout = 0.3
-        runs = 5 # 3
+        runs = 3 # 3
 
         nb_classes = len(train_ground_truth.classes())
         log('Number of classes: {}'.format(nb_classes))
@@ -219,8 +220,7 @@ def train(run=0, epochs=5000, patience=50, batch_size=32, lr=0.001, model:Model=
         checkpoint_model_file = 'checkpoint_model.h5'
         binarizer = OneHotEncoder(sparse=False)
         binarizer.fit([[c] for c in range(train_ground_truth.nb_classes)])
-        # model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=lr), metrics=['accuracy'])
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=lr), metrics=['accuracy'])
         log('Run {}, {}, params={}'.format(run, model.name, model.count_params()))
         log(model.summary())
         train_generator = DataGenerator(train_ground_truth,
@@ -237,7 +237,7 @@ def train(run=0, epochs=5000, patience=50, batch_size=32, lr=0.001, model:Model=
         callbacks = [EarlyStopping(monitor='val_loss', patience=patience, verbose=1),
                      ModelCheckpoint(checkpoint_model_file, monitor='val_loss'),
                      tensorboard_callback]
-        model.fit(train_generator, epochs=epochs, verbose=0, callbacks=callbacks,
+        model.fit(train_generator, epochs=epochs, callbacks=callbacks,
                                       validation_data=valid_generator)
         log(model.summary())
         log('lr={}, batch_size={}, epochs={}, augmenter={}, model_name={}'
